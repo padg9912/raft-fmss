@@ -1,0 +1,23 @@
+klee --libc=uclibc --posix-runtime --optimize --only-output-states-covering-new --max-time=600 raft_klee_test.bc
+PID: 8
+Using monotonic steady clock with 1/1000000000s resolution
+Started: 2025-04-25 23:24:55
+BEGIN searcher description
+<InterleavedSearcher> containing 2 searchers:
+RandomPathSearcher
+WeightedRandomSearcher::CoveringNew
+</InterleavedSearcher>
+END searcher description
+Finished: 2025-04-25 23:34:56
+Elapsed: 00:10:01
+KLEE: done: explored paths = 9004
+KLEE: done: avg. constructs per query = 1057
+KLEE: done: total queries = 12703
+KLEE: done: valid queries = 8955
+KLEE: done: invalid queries = 3748
+KLEE: done: query cex = 12703
+
+KLEE: done: total instructions = 9214847
+KLEE: done: completed paths = 520
+KLEE: done: partially completed paths = 8484
+KLEE: done: generated tests = 5
