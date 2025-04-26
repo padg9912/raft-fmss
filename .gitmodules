@@ -1,0 +1,6 @@
+[submodule "raft"]
+	path = raft
+	url = https://github.com/cowsql/raft.git
+[submodule "raft_spec"]
+	path = raft_spec
+	url = https://github.com/padg9912/raft.tla.git
