@@ -1,0 +1,11 @@
+Error: failed external call: assert
+File: raft_klee_test.c
+Line: 510
+assembly.ll line: 5723
+State: 1875
+Stack: 
+	#000005723 in verify_log_replication_progress(nodes=138515069595648, metrics=138511848370176, rounds=11, is_adversarial=0) at raft_klee_test.c:510
+	#100006936 in __klee_posix_wrapped_main() at raft_klee_test.c:782
+	#200002367 in __user_main(argcPtr=1, argvPtr=139707459891200, envp=139707459891216) at klee_src/runtime/POSIX/klee_init_env.c:245
+	#300000461 in __uClibc_main(1, 139707459891200) at libc/misc/internals/__uClibc_main.c:401
+	#400000627 in main(1, 139707459891200)

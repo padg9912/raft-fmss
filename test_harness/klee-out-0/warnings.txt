@@ -1,0 +1,5 @@
+KLEE: WARNING: undefined reference to function: assert
+KLEE: WARNING ONCE: calling external: syscall(16, 0, 21505, 138497889726464) at klee_src/runtime/POSIX/fd.c:997 10
+KLEE: WARNING ONCE: Alignment of memory from call "malloc" is not modelled. Using alignment of 8.
+KLEE: WARNING ONCE: calling external: assert(1) at raft_klee_test.c:512 13
+KLEE: WARNING ONCE: skipping fork (memory cap exceeded)

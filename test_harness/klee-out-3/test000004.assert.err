@@ -1,0 +1,10 @@
+Error: ASSERTION FAIL: 0 && "Poor election success rate"
+File: raft_klee_test.c
+Line: 716
+assembly.ll line: 6652
+State: 156
+Stack: 
+	#000006652 in __klee_posix_wrapped_main() at raft_klee_test.c:716
+	#100002362 in __user_main(argcPtr=1, argvPtr=140377018236928, envp=140377018236944) at klee_src/runtime/POSIX/klee_init_env.c:245
+	#200000456 in __uClibc_main(1, 140377018236928) at libc/misc/internals/__uClibc_main.c:401
+	#300000622 in main(1, 140377018236928)

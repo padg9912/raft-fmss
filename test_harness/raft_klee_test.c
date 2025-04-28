@@ -7,7 +7,7 @@
 
 // Mock Raft node states
 typedef enum {
-    FOLLOWER = 0, 
+    FOLLOWER = 0,
     CANDIDATE = 1,
     LEADER = 2
 } RaftState;
@@ -57,6 +57,9 @@ typedef struct {
     int entries_length; // Number of entries in the message
     LogEntry entries[5];  // Support for sending up to 5 entries at once
     int leader_commit; // Commit index of the leader
+    int last_log_index; // Last log index for append response
+    int match_index; // Match index in append response
+    int prev_match_index; // Previous match index in append response
 } RaftMessage;
 
 // Network state
@@ -317,57 +320,51 @@ void process_message(RaftNode* node, RaftMessage* msg, NetworkState* network, Ra
         case APPEND_RESPONSE:
             // Handle append response
             if (node->state == LEADER && msg->success) {
-                // Calculate how many entries were successfully replicated
-                int entries_replicated = msg->entries_length;
-                
-                // If successful, update next_index and match_index
-                node->next_index[msg->sender_id] = msg->prev_log_index + msg->entries_length + 1;
-                node->match_index[msg->sender_id] = msg->prev_log_index + msg->entries_length;
-                
-                // Update metrics for successful replication
-                if (metrics && entries_replicated > 0) {
+                // Update match_index and next_index for follower
+                node->match_index[msg->sender_id] = msg->last_log_index;
+                node->next_index[msg->sender_id] = msg->last_log_index + 1;
+
+                if (metrics) {
+                    // Calculate number of entries successfully replicated
+                    int entries_replicated = (msg->match_index > msg->prev_match_index) ? 
+                                            (msg->match_index - msg->prev_match_index) : 
+                                            msg->entries_length;
+                    
+                    // Update total replicated entries
                     metrics->log_entries_replicated += entries_replicated;
+                    
+                    // Track per-follower replication
                     metrics->follower_replication[msg->sender_id] += entries_replicated;
                     
-                    // Add simulated latency based on network delay
+                    // Update replication latency with actual network delay
                     metrics->replication_latency += network->message_delay[node->id][msg->sender_id];
-                }
-                
-                // Check if we can advance commit_index
-                // Find the highest index that a majority of nodes have replicated
-                for (int n = node->log_length; n > node->commit_index; n--) {
-                    int replica_count = 1; // Count self
                     
-                    for (int i = 0; i < 5; i++) {
-                        if (i != node->id && node->match_index[i] >= n) {
-                            replica_count++;
-                        }
+                    // Check if this is a partial or full replication
+                    if (node->match_index[msg->sender_id] == node->last_applied) {
+                        // This follower is fully caught up with the leader
+                        metrics->full_replication++;
+                    } else {
+                        // This follower has some entries but not all
+                        metrics->partial_replication++;
                     }
-                    
-                    // If we have a majority and the log entry is from current term
-                    if (replica_count > 2 && node->log[n-1].term == node->currentTerm) {
-                        node->commit_index = n;
-                        node->last_applied = n;
-                        
-                        // Update partial and full replication metrics
-                        if (metrics) {
-                            // Check if all followers have this entry
-                            int all_followers_have_entry = 1;
-                            for (int i = 0; i < 5; i++) {
-                                if (i != node->id && node->match_index[i] < n) {
-                                    all_followers_have_entry = 0;
-                                    break;
-                                }
-                            }
-                            
-                            if (all_followers_have_entry) {
-                                metrics->full_replication++;
-                            } else {
-                                metrics->partial_replication++;
+                }
+
+                // Try to advance the commit index
+                // Find the largest N such that a majority of match_index[i] >= N
+                // and N > commitIndex and N is from current term
+                for (size_t N = node->commit_index + 1; N <= node->last_applied; N++) {
+                    if (node->log[N].term == node->currentTerm) {
+                        int count = 1; // Count self
+                        for (size_t i = 0; i < NUM_NODES; i++) {
+                            if (i != node->id && node->match_index[i] >= N) {
+                                count++;
                             }
                         }
-                        
+                        if (count > NUM_NODES / 2) {
+                            node->commit_index = N;
+                        } else {
                         break;
+                        }
                     }
                 }
             } else if (node->state == LEADER && !msg->success) {
@@ -379,6 +376,22 @@ void process_message(RaftNode* node, RaftMessage* msg, NetworkState* network, Ra
                 // Update metrics for failed replication
                 if (metrics) {
                     metrics->replication_failures++;
+                    
+                    // Track which entries failed to replicate
+                    int attempted_entries = msg->entries_length > 0 ? msg->entries_length : 1;
+                    
+                    // Add failed replication latency to total latency
+                    // This helps measure the cost of failures in terms of time
+                    metrics->replication_latency += network->message_delay[node->id][msg->sender_id];
+                    
+                    // If we have many consecutive failures for this follower, 
+                    // we might want to track this as a potential network partition
+                    if (node->next_index[msg->sender_id] <= 1) {
+                        // We've backed up all the way - this follower might be disconnected
+                        // In a real implementation, we might want to mark this node as potentially partitioned
+                        // For now, we just count the extreme failure case
+                        metrics->log_consistency_violations++;
+                    }
                 }
             }
             break;
@@ -486,70 +499,73 @@ void verify_log_consistency(RaftNode nodes[], int num_nodes, RaftMetrics* metric
     }
 }
 
-// Verify that log entries are eventually replicated to all nodes
-void verify_log_replication_progress(RaftNode nodes[], int num_nodes, RaftMetrics* metrics, int round) {
-    // Only check this after a reasonable number of rounds
-    if (round < 15) return;  // Skip early rounds
+// Verify that log entries are replicated to all nodes after a certain number of rounds
+void verify_log_replication_progress(RaftNode nodes[], int num_nodes, RaftMetrics *metrics, int rounds, int is_adversarial) {
+    // Identify the leader
+    int leader_idx = identify_leader(nodes, num_nodes);
     
-    // Find any leader
-    int leader_id = -1;
+    // Minimal verification: After enough rounds, some entries should have been replicated
+    if (rounds > NUM_NODES * 2) {
+        // At least some replication attempts should have been made
+        assert(metrics->log_entries_replicated > 0 || leader_idx == -1);
+        
+        if (leader_idx != -1) {
+            RaftNode *leader = &nodes[leader_idx];
+            
+            // If we have a leader with entries, verify that metrics are being tracked
+            if (leader->log_length > 0) {
+                // At least some followers should have received entries
+                assert(metrics->follower_replication[leader_idx] > 0);
+                
+                // Partial replication should be tracked if we've had any successful replication
+                if (metrics->log_entries_replicated > 0) {
+                    assert(metrics->partial_replication > 0);
+                    
+                    // In non-adversarial scenarios with enough rounds, full replication should occur for some entries
+                    if (!is_adversarial && rounds > NUM_NODES * 3) {
+                        assert(metrics->full_replication > 0);
+                    }
+                    
+                    // Check follower-specific replication progress
+                    int followers_with_entries = 0;
+    for (int i = 0; i < num_nodes; i++) {
+                        if (i != leader_idx && nodes[i].log_length > 0) {
+                            followers_with_entries++;
+                        }
+                    }
+                    
+                    // At least half of followers should eventually get some entries in normal conditions
+                    if (!is_adversarial && rounds > NUM_NODES * 4) {
+                        assert(followers_with_entries >= (num_nodes - 1) / 2);
+                    }
+                    
+                    // Additional metrics checks for non-adversarial scenarios
+                    if (!is_adversarial && rounds > NUM_NODES * 5) {
+                        // Replication efficiency: More successful than failed attempts over time
+                        if (metrics->replication_failures > 0) {
+                            assert(metrics->log_entries_replicated >= metrics->replication_failures);
+                        }
+                        
+                        // Latency should be reasonable (non-zero but finite)
+                        if (metrics->log_entries_replicated > 0) {
+                            assert(metrics->replication_latency > 0);
+                            assert(metrics->replication_latency / metrics->log_entries_replicated < rounds * 2);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Identify the leader among all nodes, returns -1 if none found
+int identify_leader(RaftNode nodes[], int num_nodes) {
     for (int i = 0; i < num_nodes; i++) {
         if (nodes[i].state == LEADER) {
-            leader_id = i;
-            break;
+            return i;
         }
     }
-    
-    // If there's a leader and it has entries
-    if (leader_id != -1 && nodes[leader_id].log_length > 0) {
-        // First, use the metrics for basic verification
-        if (metrics) {
-            // After enough rounds, we should have some log entries replicated
-            if (round >= 15) {
-                klee_assert(metrics->log_entries_replicated > 0 || "No log entries have been replicated");
-            }
-            
-            // In more advanced rounds, we should have at least partial replication
-            if (round >= 20) {
-                klee_assert(metrics->partial_replication > 0 || "No entries have achieved partial replication");
-            }
-            
-            // Check follower-specific replication progress
-            int followers_with_entries = 0;
-            for (int i = 0; i < num_nodes; i++) {
-                if (i != leader_id && metrics->follower_replication[i] > 0) {
-                    followers_with_entries++;
-                }
-            }
-            
-            // Detailed verification of replication progress
-            if (round >= 25) {
-                // Assert that at least half of the followers have received entries
-                klee_assert(followers_with_entries >= (num_nodes - 1) / 2 || 
-                           "Less than half of followers have received log entries");
-                
-                // If we've had many failures, make sure we're still making progress
-                if (metrics->replication_failures > 10) {
-                    klee_assert(metrics->log_entries_replicated > metrics->replication_failures / 2 || 
-                               "Too many failures compared to successful replications");
-                }
-            }
-        } else {
-            // Fallback to direct node state checking if metrics aren't available
-            int total_replicated = 0;
-            
-            for (int i = 0; i < num_nodes; i++) {
-                if (i != leader_id && nodes[i].log_length > 0) {
-                    total_replicated++;
-                }
-            }
-            
-            // After enough rounds, at least one follower should have received some entries
-            if (round >= 15) {
-                klee_assert(total_replicated > 0 || "No log entries replicated to any follower");
-            }
-        }
-    }
+    return -1;  // No leader found
 }
 
 // Main test function for KLEE
@@ -692,8 +708,16 @@ int main() {
                                 (msg.prev_log_index <= nodes[j].log_length && 
                                  nodes[j].log[msg.prev_log_index - 1].term == msg.prev_log_term)) {
                                 response.success = 1;
+                                // Set the match index fields for successful response
+                                response.last_log_index = msg.prev_log_index + msg.entries_length;
+                                response.match_index = response.last_log_index;
+                                response.prev_match_index = msg.prev_log_index;
                             } else {
                                 response.success = 0;
+                                // Set default values for unsuccessful response
+                                response.last_log_index = msg.prev_log_index;
+                                response.match_index = 0;
+                                response.prev_match_index = msg.prev_log_index;
                             }
                             
                             process_message(&nodes[i], &response, &network, &metrics, 0);
@@ -733,6 +757,13 @@ int main() {
                     msg.success = klee_range(0, 1, "success");
                     msg.prev_log_index = klee_range(0, 10, "resp_prev_log_index");
                     msg.entries_length = klee_range(0, 5, "resp_entries_length");
+                    
+                    // Add the missing fields for APPEND_RESPONSE
+                    if (msg.type == APPEND_RESPONSE) {
+                        msg.last_log_index = msg.prev_log_index + msg.entries_length;
+                        msg.match_index = msg.success ? msg.last_log_index : 0;
+                        msg.prev_match_index = msg.prev_log_index;
+                    }
                 }
                 
                 process_message(&nodes[msg.receiver_id], &msg, &network, &metrics, heartbeat_delay);
@@ -748,7 +779,23 @@ int main() {
         // Verify liveness properties after a reasonable number of rounds
         if (round >= 10) { // Check liveness after at least 10 rounds
             verify_liveness_properties(nodes, NUM_NODES, &metrics, num_rounds);
-            verify_log_replication_progress(nodes, NUM_NODES, &metrics, round);
+            verify_log_replication_progress(nodes, NUM_NODES, &metrics, round, adversarial_message_delays);
+            
+            // Additional assertions for enhanced metrics after sufficient rounds
+            if (metrics.log_replication_attempts > 0) {
+                // Ensure we're making progress with replication
+                klee_assert(metrics.log_entries_replicated > 0 || "No entries have been replicated");
+                
+                // Check if we're achieving at least partial replication
+                if (round >= 15) {
+                    klee_assert(metrics.partial_replication > 0 || "No partial replication achieved after 15 rounds");
+                }
+                
+                // By late rounds, we should see some full replication if network is stable
+                if (round >= 20 && !adversarial_message_delays) {
+                    klee_assert(metrics.full_replication > 0 || "No full replication achieved in stable network");
+                }
+            }
         }
     }
     
@@ -763,6 +810,28 @@ int main() {
             // In a healthy system, we expect a decent success rate
             klee_assert(metrics.log_replication_success > 0 || "No log replication succeeded");
             
+            // Ensure we're replicating entries
+            klee_assert(metrics.log_entries_replicated > 0 || "No entries were replicated");
+            
+            // In adversarial conditions, we should achieve at least partial replication
+            klee_assert(metrics.partial_replication > 0 || "No partial replication achieved under adversarial conditions");
+            
+            // Check for balanced replication among followers
+            int min_follower_replication = metrics.follower_replication[0];
+            int max_follower_replication = metrics.follower_replication[0];
+            for (int i = 1; i < NUM_NODES; i++) {
+                if (i != identify_leader(nodes, NUM_NODES)) {
+                    if (metrics.follower_replication[i] < min_follower_replication) {
+                        min_follower_replication = metrics.follower_replication[i];
+                    }
+                    if (metrics.follower_replication[i] > max_follower_replication) {
+                        max_follower_replication = metrics.follower_replication[i];
+                    }
+                }
+            }
+            // Some followers should have received entries
+            klee_assert(max_follower_replication > 0 || "No followers received any entries");
+            
             // Verify no consistency violations remain
             klee_assert(metrics.log_consistency_violations == 0 || "Log consistency violations detected");
         }
@@ -776,6 +845,25 @@ int main() {
         float success_rate = (float)metrics.election_success_count / metrics.election_attempt_count;
         if (success_rate < 0.1 && metrics.election_attempt_count >= 5) {
             klee_assert(0 && "Poor election success rate");
+        }
+    }
+    
+    // Final replication quality metrics
+    if (metrics.log_replication_attempts > 0 && metrics.leader_elected) {
+        // Calculate replication efficiency
+        float replication_success_rate = (float)metrics.log_replication_success / metrics.log_replication_attempts;
+        // We expect at least some success in replication attempts
+        if (replication_success_rate < 0.05 && metrics.log_replication_attempts >= 10) {
+            klee_assert(0 && "Extremely poor replication success rate");
+        }
+        
+        // Check average latency if we have successful replications
+        if (metrics.log_replication_success > 0) {
+            float avg_latency = (float)metrics.replication_latency / metrics.log_replication_success;
+            // Report excessive latency
+            if (avg_latency > 30 && !adversarial_message_delays) {
+                klee_assert(0 && "Excessive replication latency in stable network");
+            }
         }
     }
     

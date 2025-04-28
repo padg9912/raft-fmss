@@ -1,0 +1,4 @@
+klee --libc=uclibc --posix-runtime --optimize --only-output-states-covering-new raft_klee_test.bc
+PID: 7
+Using monotonic steady clock with 1/1000000000s resolution
+Started: 2025-04-26 21:54:07

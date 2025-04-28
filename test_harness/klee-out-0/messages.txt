@@ -1,0 +1,13 @@
+KLEE: Using STP solver backend
+KLEE: SAT solver: MiniSat
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x7f0e8d84f000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x7f0c0d84f000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x7e0c0d84f000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x7dec0d84f000 size=128 GiB)
+KLEE: ERROR: raft_klee_test.c:847: ASSERTION FAIL: 0 && "Poor election success rate"
+KLEE: NOTE: now ignoring this error at this location
+KLEE: ERROR: raft_klee_test.c:840: ASSERTION FAIL: 0 && "Liveness violation: No leader elected after sufficient rounds"
+KLEE: NOTE: now ignoring this error at this location
+KLEE: ERROR: raft_klee_test.c:510: failed external call: assert
+KLEE: NOTE: now ignoring this error at this location

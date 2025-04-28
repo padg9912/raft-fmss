@@ -1,0 +1,184 @@
+array command_value[4] : w32 -> w8 = symbolic
+array command_value_1[4] : w32 -> w8 = symbolic
+array command_value_2[4] : w32 -> w8 = symbolic
+array command_value_3[4] : w32 -> w8 = symbolic
+array electionTimeout[4] : w32 -> w8 = symbolic
+array electionTimeout_1[4] : w32 -> w8 = symbolic
+array electionTimeout_2[4] : w32 -> w8 = symbolic
+array electionTimeout_3[4] : w32 -> w8 = symbolic
+array electionTimeout_4[4] : w32 -> w8 = symbolic
+array heartbeatTimeout[4] : w32 -> w8 = symbolic
+array heartbeatTimeout_1[4] : w32 -> w8 = symbolic
+array heartbeatTimeout_2[4] : w32 -> w8 = symbolic
+array heartbeatTimeout_3[4] : w32 -> w8 = symbolic
+array heartbeatTimeout_4[4] : w32 -> w8 = symbolic
+array message_delay[4] : w32 -> w8 = symbolic
+array message_delay_1[4] : w32 -> w8 = symbolic
+array message_delay_10[4] : w32 -> w8 = symbolic
+array message_delay_11[4] : w32 -> w8 = symbolic
+array message_delay_12[4] : w32 -> w8 = symbolic
+array message_delay_13[4] : w32 -> w8 = symbolic
+array message_delay_14[4] : w32 -> w8 = symbolic
+array message_delay_15[4] : w32 -> w8 = symbolic
+array message_delay_16[4] : w32 -> w8 = symbolic
+array message_delay_17[4] : w32 -> w8 = symbolic
+array message_delay_18[4] : w32 -> w8 = symbolic
+array message_delay_19[4] : w32 -> w8 = symbolic
+array message_delay_2[4] : w32 -> w8 = symbolic
+array message_delay_3[4] : w32 -> w8 = symbolic
+array message_delay_4[4] : w32 -> w8 = symbolic
+array message_delay_5[4] : w32 -> w8 = symbolic
+array message_delay_6[4] : w32 -> w8 = symbolic
+array message_delay_7[4] : w32 -> w8 = symbolic
+array message_delay_8[4] : w32 -> w8 = symbolic
+array message_delay_9[4] : w32 -> w8 = symbolic
+array num_initial_entries[4] : w32 -> w8 = symbolic
+array num_rounds[4] : w32 -> w8 = symbolic
+array time_advance[4] : w32 -> w8 = symbolic
+array time_advance_1[4] : w32 -> w8 = symbolic
+array time_advance_2[4] : w32 -> w8 = symbolic
+array time_advance_3[4] : w32 -> w8 = symbolic
+array time_advance_4[4] : w32 -> w8 = symbolic
+array time_advance_5[4] : w32 -> w8 = symbolic
+array time_advance_6[4] : w32 -> w8 = symbolic
+array time_advance_7[4] : w32 -> w8 = symbolic
+array time_advance_8[4] : w32 -> w8 = symbolic
+array time_advance_9[4] : w32 -> w8 = symbolic
+(query [(Sle 150
+              N0:(ReadLSB w32 0 electionTimeout))
+         (Slt N0 300)
+         (Sle 50
+              N1:(ReadLSB w32 0 heartbeatTimeout))
+         (Slt N1 200)
+         (Sle 150
+              N2:(ReadLSB w32 0 electionTimeout_1))
+         (Slt N2 300)
+         (Sle 50
+              N3:(ReadLSB w32 0 heartbeatTimeout_1))
+         (Slt N3 200)
+         (Sle 150
+              N4:(ReadLSB w32 0 electionTimeout_2))
+         (Slt N4 300)
+         (Sle 50
+              N5:(ReadLSB w32 0 heartbeatTimeout_2))
+         (Slt N5 200)
+         (Sle 150
+              N6:(ReadLSB w32 0 electionTimeout_3))
+         (Slt N6 300)
+         (Sle 50
+              N7:(ReadLSB w32 0 heartbeatTimeout_3))
+         (Slt N7 200)
+         (Sle 150
+              N8:(ReadLSB w32 0 electionTimeout_4))
+         (Slt N8 300)
+         (Sle 50
+              N9:(ReadLSB w32 0 heartbeatTimeout_4))
+         (Slt N9 200)
+         (Ult (ReadLSB w32 0 message_delay)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_1)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_2)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_3)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_4)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_5)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_6)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_7)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_8)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_9)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_10)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_11)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_12)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_13)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_14)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_15)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_16)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_17)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_18)
+              100)
+         (Ult (ReadLSB w32 0 message_delay_19)
+              100)
+         (Sle 1
+              N10:(ReadLSB w32 0 num_rounds))
+         (Slt N10 20)
+         (Sle 1
+              N11:(ReadLSB w32 0 num_initial_entries))
+         (Slt N11 5)
+         (Sle 1
+              N12:(ReadLSB w32 0 command_value))
+         (Slt N12 100)
+         (Slt 1 N11)
+         (Sle 1
+              N13:(ReadLSB w32 0 command_value_1))
+         (Slt N13 100)
+         (Slt 2 N11)
+         (Sle 1
+              N14:(ReadLSB w32 0 command_value_2))
+         (Slt N14 100)
+         (Slt 3 N11)
+         (Sle 1
+              N15:(ReadLSB w32 0 command_value_3))
+         (Slt N15 100)
+         (Sle 10
+              N16:(ReadLSB w32 0 time_advance))
+         (Slt N16 50)
+         (Slt 1 N10)
+         (Sle 10
+              N17:(ReadLSB w32 0 time_advance_1))
+         (Slt N17 50)
+         (Slt 2 N10)
+         (Sle 10
+              N18:(ReadLSB w32 0 time_advance_2))
+         (Slt N18 50)
+         (Slt 3 N10)
+         (Sle 10
+              N19:(ReadLSB w32 0 time_advance_3))
+         (Slt N19 50)
+         (Slt N0
+              N20:(Add w32 (Add w32 (Add w32 N16 N17) N18)
+                           N19))
+         (Slt N2 N20)
+         (Slt N4 N20)
+         (Slt N6 N20)
+         (Slt N8 N20)
+         (Slt 4 N10)
+         (Sle 10
+              N21:(ReadLSB w32 0 time_advance_4))
+         (Slt N21 50)
+         (Slt 5 N10)
+         (Sle 10
+              N22:(ReadLSB w32 0 time_advance_5))
+         (Slt N22 50)
+         (Slt 6 N10)
+         (Sle 10
+              N23:(ReadLSB w32 0 time_advance_6))
+         (Slt N23 50)
+         (Slt 7 N10)
+         (Sle 10
+              N24:(ReadLSB w32 0 time_advance_7))
+         (Slt N24 50)
+         (Slt 8 N10)
+         (Sle 10
+              N25:(ReadLSB w32 0 time_advance_8))
+         (Slt N25 50)
+         (Slt 9 N10)
+         (Sle 10
+              N26:(ReadLSB w32 0 time_advance_9))
+         (Slt N26 50)]
+        false)

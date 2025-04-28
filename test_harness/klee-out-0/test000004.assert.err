@@ -1,0 +1,10 @@
+Error: ASSERTION FAIL: 0 && "Liveness violation: No leader elected after sufficient rounds"
+File: raft_klee_test.c
+Line: 840
+assembly.ll line: 7193
+State: 1584
+Stack: 
+	#000007193 in __klee_posix_wrapped_main() at raft_klee_test.c:840
+	#100002367 in __user_main(argcPtr=1, argvPtr=139707459891200, envp=139707459891216) at klee_src/runtime/POSIX/klee_init_env.c:245
+	#200000461 in __uClibc_main(1, 139707459891200) at libc/misc/internals/__uClibc_main.c:401
+	#300000627 in main(1, 139707459891200)
