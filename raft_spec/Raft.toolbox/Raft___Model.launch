@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.lamport.tla.toolbox.tool.tlc.modelCheck">
+    <stringAttribute key="configurationName" value="Model_1"/>
+    <stringAttribute key="modelBehaviorSpec" value="Spec"/>
+    <intAttribute key="modelBehaviorSpecType" value="1"/>
+    <listAttribute key="modelParameterConstants">
+        <listEntry value="Server;;;s1,s2,s3,s4,s5;0"/>
+        <listEntry value="Value;;;v1,v2,v3;0"/>
+        <listEntry value="Follower;;;Follower;0"/>
+        <listEntry value="Candidate;;;Candidate;0"/>
+        <listEntry value="Leader;;;Leader;0"/>
+        <listEntry value="Nil;;;Nil;0"/>
+        <listEntry value="RequestVoteRequest;;;RequestVoteRequest;0"/>
+        <listEntry value="RequestVoteResponse;;;RequestVoteResponse;0"/>
+        <listEntry value="AppendEntriesRequest;;;AppendEntriesRequest;0"/>
+        <listEntry value="AppendEntriesResponse;;;AppendEntriesResponse;0"/>
+        <listEntry value="MaxElectionTimeout;;;300;0"/>
+        <listEntry value="MinElectionTimeout;;;150;0"/>
+        <listEntry value="HeartbeatTimeout;;;50;0"/>
+        <listEntry value="MaxHeartbeatDelay;;;100;0"/>
+        <listEntry value="MaxMessageDelay;;;100;0"/>
+        <listEntry value="MaxNetworkPartition;;;2;0"/>
+        <listEntry value="MessageDropProb;;;50;0"/>
+    </listAttribute>
+    <stringAttribute key="specName" value="Raft"/>
+</launchConfiguration>
