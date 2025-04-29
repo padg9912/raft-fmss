@@ -94,5 +94,3 @@ git submodule update --init --recursive
 For questions or issues, please contact the project maintainer via the [GitHub repository](https://github.com/padg9912/raft-fmss).
 
 ---
-
-This README should provide your professor with a clear understanding of the project's structure, implementation, and how to navigate and reproduce your results. If you want to add more details (e.g., about results, evaluation, or specific scripts), let me know! 
