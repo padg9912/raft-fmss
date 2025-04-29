@@ -16,7 +16,7 @@ raft-fmss/
 │   ├── Raft.tla         # Main TLA+ specification of Raft (with adversarial extensions)
 │   ├── RaftAdversarial.cfg # TLA+ model checker configuration for adversarial scenarios
 │   └── Raft.toolbox/    # TLA+ Toolbox project files (model, config, etc.)
-│              ├── TLAplusModelCheck.out # Example output from TLA+ model checking  
+│              └── TLAplusModelCheck.out # Example output from TLA+ model checking  
 │      
 │
 ├── test_harness/        # KLEE symbolic test harness, scripts, and results
