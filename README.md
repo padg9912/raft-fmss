@@ -7,7 +7,7 @@ This project provides a comprehensive, adversarially robust verification of the 
 ## Project Structure
 
 ```
-raft-analysis/
+raft-fmss/
 │
 ├── raft/                # cowsql Raft C implementation (as a submodule)
 │   └── ...              # Source code, docs, and build files for Raft
