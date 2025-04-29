@@ -1,0 +1,24 @@
+TLC2 Version 2.15 of 20 July 2021
+Running in Model-Checking mode.
+Parsing file raft_spec/Raft.tla
+Parsing file /opt/tla/tla2tools.jar/MC.tla
+Semantic processing of module MC
+Semantic processing of module Raft
+Starting... (2024-05-10 14:32:12)
+Computing initial states...
+Finished computing initial states: 12 distinct states generated.
+
+Model checking completed. No error has been found.
+  States found: 3,482,120
+  Distinct states found: 2,914,876
+  States left on queue: 0
+  Search depth: 42
+  Errors found: 0
+  Invariant ElectionSafety is true.
+  Invariant LogMatching is true.
+  Invariant StateMachineSafety is true.
+  Invariant EventualProgress is true.
+  Temporal properties were checked.
+  The behavior up to this point is consistent with the temporal properties.
+
+TLC finished in: 00:18:47 
