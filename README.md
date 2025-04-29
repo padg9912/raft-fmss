@@ -76,7 +76,7 @@ git submodule update --init --recursive
 
 - **`raft/`**: cowsql Raft C implementation (submodule, do not edit directly)
 - **`raft_spec/`**: TLA+ specification, configs, and model checking outputs
-- **`raft_spec/Raft.toolbox/`**: TLA+ Toolbox project files (models, configs, LaTeX)
+- **`raft_spec/Raft.toolbox/`**: TLA+ Toolbox project files (model, config)
 - **`test_harness/`**: KLEE test harness, scripts, and symbolic execution results
 - **`run_tests.sh`**: Script to build and run all tests
 
